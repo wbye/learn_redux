@@ -2,7 +2,7 @@
   "name": "test_redux",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -23,8 +23,10 @@
     "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
+    "classnames": "^2.2.5",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
+    "react-redux": "^4.4.5",
     "redux": "^3.5.2"
   }
 }

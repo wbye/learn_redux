@@ -1,6 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
-import {createStore} from 'redux';
+import createStore from 'redux/lib/createStore';
+import {Image,NormalImage,ReplaceImage} from './components/image';
 
 const person = (state = 'nobody',action ={})=>{
     switch (action.type){
@@ -132,4 +133,19 @@ render(
 render(
     <TableApp store={personStore2}/>,
     document.getElementById('root2')
+);
+
+render(
+    <Image src="http://r2.ykimg.com/051500005769F1DD67BC3D4F7B0A407E" />,
+    document.getElementById('root3')
+);
+
+render(
+    <NormalImage src="http://r2.ykimg.com/051500005769F1DD67BC3D4F7B0A407E" width="200px" height="200px"/>,
+    document.getElementById('root4')
+);
+
+render(
+    <ReplaceImage src="https://cscdn.maxleap.cn/2.0/download/NTY3MTNiYTFhNWZmN2YwMDAxYjM5ZDdj/zcf-28da58e2-f5a8-4116-a6c0-072223ec6aa2.png" width="200px" height="200px" />,
+    document.getElementById('root5')
 );

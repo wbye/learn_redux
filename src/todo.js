@@ -1,6 +1,7 @@
 import React from 'react';
 import {render} from 'react-dom';
 import {createStore,combineReducers} from 'redux';
+import {Provider,connect} from 'react-redux';
 
 const Button = ({
     children,
@@ -19,46 +20,81 @@ const Link = ({
     }
     return <a href="javascript:void(0);" onClick={onClick}>{children}</a>
 }
-
-class FilterLink extends React.Component {
-    render() {
-        let props = this.props;
-
-        return <Link {...props}></Link>;
+const mapStateToLinkProps = (state, ownProps)=> {
+    return {
+        active: state.currentFilter === ownProps.filter
     }
 }
+const mapDispatchToLinkProps = (dispatch, ownProps)=> {
+    return {
+        onClick: ()=> {
+            dispatch(setVisibleFilter(ownProps.filter))
+        }
+    }
+}
+const FilterLink = connect(mapStateToLinkProps, mapDispatchToLinkProps)(Link);
+
+//class FilterLink extends React.Component {
+//    componentDidMount(){
+//        let {store} = this.context;
+//        this.unsubscribe = store.subscribe(()=>{
+//            this.forceUpdate();
+//        });
+//    }
+//    componentWillUnmount(){
+//        this.unsubscribe();
+//    }
+//    render(){
+//        let {filter,children} = this.props;
+//        let {store} = this.context;
+//        let currentFilter = store.getState().currentFilter;
+//
+//        return (
+//            <Link active={currentFilter===filter}
+//                onClick={()=>{
+//                    store.dispatch({
+//                        type:"SET_VISIBLE_FILTER",
+//                        filter:filter
+//                    });
+//                }}>
+//                {children}
+//            </Link>
+//        );
+//    }
+//};
+//FilterLink.contextTypes = {
+//    store:React.PropTypes.object
+//}
 
 class FilterList extends React.Component {
-    render(){
-        let currentFilter = todoStore.getState().currentFilter;
-
-
+    render() {
         return (
             <div>
-                <FilterLink active={currentFilter==='SHOW_ALL'}  onClick={()=>{
-                    todoStore.dispatch({
-                        type:"SET_VISIBLE_FILTER",
-                        filter:"SHOW_ALL"
-                    });
-                }}>全部</FilterLink>
-                <FilterLink active={currentFilter==='SHOW_COMPLETED'} onClick={()=>{
-                    todoStore.dispatch({
-                        type:"SET_VISIBLE_FILTER",
-                        filter:"SHOW_COMPLETED"
-                    });
-                }}>已完成</FilterLink>
-                <FilterLink active={currentFilter==='SHOW_UNCOMPLETED'} onClick={()=>{
-                    todoStore.dispatch({
-                        type:"SET_VISIBLE_FILTER",
-                        filter:"SHOW_UNCOMPLETED"
-                    });
-                }}>未完成</FilterLink>
+                <FilterLink filter="SHOW_ALL">全部</FilterLink>
+                <FilterLink filter='SHOW_COMPLETED'>已完成</FilterLink>
+                <FilterLink filter="SHOW_UNCOMPLETED">未完成</FilterLink>
             </div>
         );
     }
 }
 
 let todoId = 0;
+const addTodo = (value) =>({
+    name:value,
+    type:"ADD_TODO"
+})
+const toggleTodo = (id) =>({
+    id,
+    type: "TOGGLE_TODO"
+})
+const removeTodo = (id) =>({
+    id,
+    type:"REMOVE_TODO"
+})
+const setVisibleFilter = (filter) =>({
+    type: "SET_VISIBLE_FILTER",
+    filter: filter
+})
 
 const TodoReducer = (state = {}, action = {})=> {
     switch (action.type) {
@@ -101,8 +137,8 @@ const TodosReducer = (state = [], action = {}) => {
             return state;
     }
 }
-const CurrentFilter = (state = 'SHOW_ALL',action = {})=>{
-    switch (action.type){
+const CurrentFilter = (state = 'SHOW_ALL', action = {})=> {
+    switch (action.type) {
         case "SET_VISIBLE_FILTER":
             return action.filter;
         default :
@@ -111,8 +147,8 @@ const CurrentFilter = (state = 'SHOW_ALL',action = {})=>{
 }
 
 const TodoAppReducer = combineReducers({
-    todos:TodosReducer,
-    currentFilter:CurrentFilter
+    todos: TodosReducer,
+    currentFilter: CurrentFilter
 })
 //const TodoAppReducer = (state = {
 //    todos: [],
@@ -144,7 +180,11 @@ const TodoAppReducer = combineReducers({
 //    }
 //}
 
-const TodoHeader = ({}) => {
+
+let TodoHeader = ({
+    onClick,
+    text
+}) => {
     let input;
 
     return (
@@ -153,85 +193,135 @@ const TodoHeader = ({}) => {
          input = node;
         }}/>
             <Button onClick={()=>{
-                todoStore.dispatch({
-                    name:input.value,
-                    type:"ADD_TODO"
-                });
+                onClick(input.value);
                 input.value='';
-            }}>添加</Button>
+            }}>添加{text}</Button>
         </div>
     );
 }
+
+const mapDispatchToHeaderProps = (dispatch)=>({
+    onClick:(value)=>{
+        dispatch(addTodo(value));
+    }
+})
+const  mapStateToHeaderProps =(state)=>({
+    text:"todo"
+})
+TodoHeader = connect(mapStateToHeaderProps,mapDispatchToHeaderProps)(TodoHeader);
+//const  TodoHeader = ()=>{
+//
+//};
+
+//TodoHeader.contextTypes = {
+//    store: React.PropTypes.object
+//}
+
 const TodoItem = ({
     name,
     completed,
-    id
+    id,
+    onClickText,
+    onClickDelete
     }) => {
     return <li onClick={()=>{
-        todoStore.dispatch({
-            id:id,
-            type:"TOGGLE_TODO"
-        })
+        onClickText(id);
     }} style={{textDecoration:completed?'line-through':'none'}}>
         {name}
         <Button onClick={()=>{
-           todoStore.dispatch({
-                id:id,
-                type:"REMOVE_TODO"
-            })
+            onClickDelete(id);
         }}>删除</Button>
     </li>;
 };
 
 const TodoList = ({
-    todos
-}) => {
+    todos,
+    onClickText,
+    onClickDelete
+    }) => {
     return (
         <ul>{
             todos.map(todo=> {
-                return <TodoItem key={todo.id} {...todo} />;
+                return <TodoItem key={todo.id} {...todo} onClickDelete={onClickDelete} onClickText={onClickText}/>;
             })
         }</ul>
     );
 };
 
-const FilterTodoList =({}) =>{
-    const FilterTodos= (todos,filter)=>{
-        switch (filter){
-            case "SHOW_ALL":
-                return [...todos];
-            case "SHOW_COMPLETED":
-                return todos.filter((t)=>{
-                    return t.completed;
-                });
-            case "SHOW_UNCOMPLETED":
-                return todos.filter((t)=>{
-                    return !t.completed;
-                });
-            default :
-                return todos;
-        }
+const getFilterTodos = (todos, filter)=> {
+    switch (filter) {
+        case "SHOW_ALL":
+            return [...todos];
+        case "SHOW_COMPLETED":
+            return todos.filter((t)=> {
+                return t.completed;
+            });
+        case "SHOW_UNCOMPLETED":
+            return todos.filter((t)=> {
+                return !t.completed;
+            });
+        default :
+            return todos;
     }
-    let state = todoStore.getState();
-    let filter = state.currentFilter;
-    let todos = FilterTodos(state.todos,filter);
+};
 
-    return (
-        <TodoList todos={todos} />
-    );
-}
+const mapStateToTodoListProps = (state) => {
+    return {
+        todos: getFilterTodos(
+            state.todos,
+            state.currentFilter
+        )
+    }
+};
+
+const mapDispatchToTodoListProps = (dispatch)=> ({
+    onClickText: (id)=> {
+        dispatch(toggleTodo(id));
+    },
+    onClickDelete: (id)=> {
+        dispatch(removeTodo(id));
+    }
+});
+
+//const mapDispatchToProps = (dispatch) => {
+//    return {
+//        onHandleCLicK:(id)=>{
+//            dispatch({
+//                type:"TOGGLE_TODO",
+//                id
+//            })
+//        }
+//    }
+//};
+
+const FilterTodoList = connect(mapStateToTodoListProps, mapDispatchToTodoListProps)(TodoList);
+//class FilterTodoList extends React.Component{
+//    componentDidMount(){
+//        let {store} = this.context;
+//
+//        this.unsubscribe = store.subscribe(()=>{
+//            this.forceUpdate();
+//        })
+//    }
+//    componentWillUnmount(){
+//        this.unsubscribe();
+//    }
+//    render(){
+//        let {store} = this.context;
+//        let state = store.getState();
+//        let todos = getFilterTodos(state.todos,state.currentFilter);
+//
+//        return (
+//            <TodoList todos={todos} />
+//        );
+//    }
+//}
+
+//FilterTodoList.contextTypes = {
+//    store:React.PropTypes.object
+//}
 
 class TodoApp extends React.Component {
-    componentDidMount() {
-        this.unsubscribe = todoStore.subscribe(()=> {
-            this.forceUpdate();
-        });
-    }
-
-    componentWillUnMount() {
-        this.unsubscribe();
-    }
-
     render() {
         return (
             <div>
@@ -242,9 +332,23 @@ class TodoApp extends React.Component {
         );
     }
 }
-const todoStore = createStore(TodoAppReducer);
+
+//class Provider extends React.Component{
+//    getChildContext(){
+//        return {
+//            store:this.props.store
+//        };
+//    }
+//    render(){
+//        return this.props.children;
+//    }
+//};
+//
+//Provider.childContextTypes = {
+//    store:React.PropTypes.object
+//}
 
 render(
-    <TodoApp />,
+    <Provider store={createStore(TodoAppReducer)}><TodoApp /></Provider>,
     document.getElementById('root')
 );
