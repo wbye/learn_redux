@@ -1,18 +1,19 @@
 var webpack = require('webpack');
 var commonsPlugin = new webpack.optimize.CommonsChunkPlugin('common.js');
 
+
+function entryFactory(entry){
+    return [
+        'webpack-dev-server/client?http://0.0.0.0:9090', // WebpackDevServer host and port
+        'webpack/hot/dev-server', // "only" prevents reload on syntax errors
+    ].concat(entry);
+
+}
 module.exports = {
     entry: {
-        table:[
-            'webpack-dev-server/client?http://0.0.0.0:9090', // WebpackDevServer host and port
-            'webpack/hot/dev-server', // "only" prevents reload on syntax errors
-            './src/table.js' // Your appʼs entry point
-        ],
-        todo:[
-            'webpack-dev-server/client?http://0.0.0.0:9090', // WebpackDevServer host and port
-            'webpack/hot/dev-server', // "only" prevents reload on syntax errors
-            './src/todo.js' // Your appʼs entry point
-        ]
+        table:entryFactory('./src/table.js'),
+        todo:entryFactory('./src/todo.js'),
+        index:entryFactory('./src/index.js')
     },
     output: {
         path: __dirname+"/public",
