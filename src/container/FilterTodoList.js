@@ -22,7 +22,7 @@ const getFilterTodos = (todos, filter)=> {
 const mapStateToProps = (state,ownProps) => ({
     todos: getFilterTodos(
         state.todos,
-        ownProps.filter
+        ownProps.filter||'all'
     )
 });
 
