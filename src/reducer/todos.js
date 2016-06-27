@@ -21,3 +21,22 @@ const TodosReducer = (state = [], action = {}) => {
 }
 
 export default  TodosReducer;
+
+
+//selector
+export const getFilterTodos = (state, filter)=> {
+    switch (filter) {
+        case "all":
+            return [...state];
+        case "complete":
+            return state.filter((t)=> {
+                return t.completed;
+            });
+        case "uncomplete":
+            return state.filter((t)=> {
+                return !t.completed;
+            });
+        default :
+            return state;
+    }
+};
